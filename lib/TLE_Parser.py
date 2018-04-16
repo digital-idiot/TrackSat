@@ -65,7 +65,7 @@ class TwoLineElement:
 
     schema = {
         'SATELLITE_NAME': (str, 'NOT NULL'), 'SATELLITE_NUMBER': (int, 'PRIMARY KEY'),
-        'CLASSFICATION': (str, 'NOT NULL'), 'LAUNCH_YEAR': (int, 'NOT NULL'), 'LAUNCH_NUMBER': (int, 'NOT NULL'),
+        'CLASSIFICATION': (str, 'NOT NULL'), 'LAUNCH_YEAR': (int, 'NOT NULL'), 'LAUNCH_NUMBER': (int, 'NOT NULL'),
         'PIECE_OF_LAUNCH': (str, 'NOT NULL'), 'EPOCH_YEAR': (int, 'NOT NULL'), 'EPOCH_DAY': (float, 'NOT NULL'),
         'FIRST_TIME_DERIVATIVE': (float, 'NOT NULL'), 'SECOND_TIME_DERIVATIVE': (float, 'NOT NULL'),
         'BSTAR_DRAG': (float, 'NOT NULL'), 'EPHEMERIS_TYPE': (int, 'NOT NULL'), 'ELEMENT_SET_NUMBER': (int, 'NOT NULL'),
@@ -134,6 +134,37 @@ class TwoLineElement:
                 print(arg_err)
             return None
 
+    def get_lines(self):
+        out = [self.__tle_line0, self.__tle_line1, self.__tle_line2]
+        if all(element is not None for element in out):
+            return out
+        else:
+            return None
+
+    @staticmethod
+    def parse_title(title, verbose=False):
+        try:
+            if title and isinstance(title, str):
+                status_pattern = re.compile(r"\[[PBSX+\-]\]")
+                match = status_pattern.search(title)
+                span = None
+                if match:
+                    span = match.span()
+                if span:
+                    name = (title[:span[0]]).strip()
+                    status = TwoLineElement.status_map[title[span[0]:span[1]]]
+                    return name, status
+                else:
+                    name = title.strip()
+                    status = str()
+                    return name, status
+            else:
+                raise ValueError("Expected not 'None' <str> as argument")
+        except ValueError as val_err:
+            if verbose:
+                print(val_err)
+            return None
+
     @staticmethod
     def parse_tle(tle_string, verbose=True):
         try:
@@ -143,18 +174,10 @@ class TwoLineElement:
                 if len(tle_lines) == 3:
                     if (len(tle_lines[0]) <= 24) and (len(tle_lines[1]) == 69) and (len(tle_lines[2]) == 69):
                         title = tle_lines[0]
-                        if title:
-                            status_pattern = re.compile(r"\[[PBSX+\-]\]")
-                            match = status_pattern.search(title)
-                            span = None
-                            if match:
-                                span = match.span()
-                            if span:
-                                tle_dict['SATELLITE_NAME'] = (title[:span[0]]).strip()
-                                tle_dict['STATUS'] = TwoLineElement.status_map[title[span[0]:span[1]]]
-                            else:
-                                tle_dict['SATELLITE_NAME'] = title.strip()
-                                tle_dict['STATUS'] = str()
+                        name_status = TwoLineElement.parse_title(title)
+                        if name_status:
+                            tle_dict['SATELLITE_NAME'] = name_status[0]
+                            tle_dict['STATUS'] = name_status[1]
                         else:
                             raise IntegrityError("parse_tle: Invalid TLE title")
                         if tle_lines[1][0] == '1':
@@ -261,17 +284,31 @@ class TwoLineElement:
             return None
 
     def __init__(self, input_string, verbose=False):
-        tle_dict = TwoLineElement.parse_tle(input_string, verbose=verbose)
-        if tle_dict:
-            self.__tle_data = tle_dict
+        self.__tle_line0 = None
+        self.__tle_line1 = None
+        self.__tle_line2 = None
+        self.__tle_dict = None
+        if isinstance(input_string, str):
+            tle_dict = TwoLineElement.parse_tle(input_string, verbose=verbose)
+            lines = (input_string.strip()).split('\n')
+            self.__tle_line0, _ = TwoLineElement.parse_title(lines[0])
+            self.__tle_line1 = lines[1]
+            self.__tle_line2 = lines[2]
+            if tle_dict:
+                self.__tle_data = tle_dict
+            else:
+                raise ValueError("Invalid <input_string>")
         else:
-            raise ValueError("Invalid <input_string>")
+            raise InvalidArgumentError("expected <str> as argument")
 
     def get_international_designator(self):
         launch_number = str(self.__tle_data['LAUNCH_NUMBER'])
         while len(launch_number) < 3:
             launch_number = "0" + launch_number
         return str(self.__tle_data['LAUNCH_YEAR']) + '-' + launch_number + str(self.__tle_data['PIECE_OF_LAUNCH'])
+
+    def get_tle_dict(self):
+        return self.__tle_data
 
 
 class TwoLineElements:
