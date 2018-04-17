@@ -4,7 +4,7 @@ from datetime import datetime
 from datetime import timedelta
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-import numpy as np
+
 
 class Tracker:
     def __init__(self, sat):
@@ -28,14 +28,13 @@ class Tracker:
         ax.stock_img()
         while True:
             position = self.__satellite.get_position()
-            print(position)
             plt.scatter(position[0], position[1], transform=ccrs.Geodetic(), )
             plt.pause(delay)
 
 
-s = '''ISS (ZARYA)             
-1 25544U 98067A   18106.24140593  .00002088  00000-0  38575-4 0  9994
-2 25544  51.6428 327.5253 0001918 355.0324 161.2063 15.54266407108880'''
+s = '''WORLDVIEW-2 (WV-2)      
+1 35946U 09055A   18106.18982368 -.00000099  00000-0 -18378-4 0  9998
+2 35946  98.4729 183.8200 0001770 165.0632 195.0663 14.37587360447041'''
 xtle = TwoLineElement(s)
 msat = Satellite.Satellite(xtle)
 #t = Tracker(msat)
@@ -54,7 +53,7 @@ tim = datetime.utcnow()
 for i in range(10000):
     pos = msat.get_position(tim)
     plt.plot(pos[1], pos[0], 'ro', transform=ccrs.Geodetic())
-    tim += timedelta(seconds=1)
+    tim += timedelta(minutes=1)
     #plt.pause(1)
     fig.canvas.draw()
 #plt.show()

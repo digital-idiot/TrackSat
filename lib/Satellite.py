@@ -30,7 +30,6 @@ class Satellite:
         year = self.__tle_dict['EPOCH_YEAR']
         days = self.__tle_dict['EPOCH_DAY']
         epoch_date = datetime(year, 1, 1) + timedelta(days=(days - 1))
-        print(epoch_date)
         return epoch_date
 
     def get_position(self, utc_datetime=datetime.utcnow()):
