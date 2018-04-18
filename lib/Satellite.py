@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from lib.TLE_Parser import TwoLineElement
 from lib.TLE_Parser import InvalidArgumentError
 from orbit_predictor.sources import MemoryTLESource
-import pytz
+
 
 
 class Satellite:

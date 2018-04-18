@@ -4,7 +4,6 @@ from datetime import datetime
 from datetime import timedelta
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-import random
 
 class Tracker:
     def __init__(self, sat):

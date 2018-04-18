@@ -1,0 +1,11 @@
+python_version >= '3.6.4'
+pip >= 9.0.3
+datetime >= 4.2
+numpy >= 1.14.2
+matplotlib >= 2.2.2
+python-magic >= 0.4.15
+cartopy >= 0.16.0
+pandas >= 0.22.0
+skyfield >= 1.2
+orbit_predictor >= 1.8.6
+pytz >= 2018.3
