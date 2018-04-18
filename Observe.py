@@ -91,7 +91,7 @@ class Observe:
                 if flag:
                     temperature = observer_location.temperature()
                     pressure = observer_location.pressure()
-                    return app.altaz(temperature_C=temperature, pressure_mbar=pressure)
+                    return line0.strip() + " : " + line1[2:7], app.altaz(temperature_C=temperature, pressure_mbar=pressure)
             else:
                 raise ValueError("Expected <ObserverLocation> as observer_location")
         except ValueError as val_err:
@@ -100,22 +100,28 @@ class Observe:
             return None
 
     def observe_sky(self, verbose=False):
-        observed = pandas.DataFrame(columns=['r', 't'])
-        i = 1
-        for tle in self.__tle_list:
-            position = Observe.locate(tle, self.__observer_location, verbose=verbose)
-            if position and position[0].degrees >= 0.0:
-                r = math.cos(position[0].degrees)
-                t = position[1].degrees
-                observed.loc[i] = r, t
-                i += 1
-        ax = pyplot.subplot(111, projection='polar')
+        color = ['r', 'g', 'b', 'y', 'm', 'k', 'tab:purple', 'tab:brown']
+        observed = pandas.DataFrame(columns=['s', 'r', 't'])
+        i = 0
         pyplot.tight_layout()
+        ax = pyplot.subplot(111, projection='polar')
+        ax.set_yticklabels([])
         ax.set_theta_zero_location("N")
-        ax.plot(observed['t'], observed['r'], 'bo')
         ax.set_rmax(1)
         ax.grid(True)
-        pyplot.title("Observable Satellites", va='top', ha='center')
+        #pyplot.title("Observable Satellites", va='top', ha='center')
+        for tle in self.__tle_list:
+            data = Observe.locate(tle, self.__observer_location, verbose=verbose)
+            if data:
+                sat = data[0]
+                position = data[1]
+                if position and position[0].degrees >= 0.0:
+                    r = math.cos(position[0].degrees)
+                    t = position[1].degrees
+                    observed.loc[i] = sat, r, t
+                    ax.plot(t, r, color[i % len(color)] + 'o', label=sat)
+                    i += 1
+        pyplot.legend(bbox_to_anchor=(1, 0), loc="lower right", bbox_transform=pyplot.gcf().transFigure)
         pyplot.show()
 
 

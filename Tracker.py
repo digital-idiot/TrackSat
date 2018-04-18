@@ -4,7 +4,7 @@ from datetime import datetime
 from datetime import timedelta
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-
+import random
 
 class Tracker:
     def __init__(self, sat):
@@ -31,10 +31,18 @@ class Tracker:
             plt.scatter(position[0], position[1], transform=ccrs.Geodetic(), )
             plt.pause(delay)
 
+s = '''GSAT-6A                 
+1 43241U 18027A   18107.55692972 -.00000081  00000-0  00000+0 0  9993
+2 43241   3.2778 292.6250 1382993 184.9815  78.9666  1.19301672   259'''
 
 s = '''WORLDVIEW-2 (WV-2)      
 1 35946U 09055A   18106.18982368 -.00000099  00000-0 -18378-4 0  9998
 2 35946  98.4729 183.8200 0001770 165.0632 195.0663 14.37587360447041'''
+
+s = '''ISS (ZARYA)             
+1 25544U 98067A   18107.44763100  .00001858  00000-0  35119-4 0  9997
+2 25544  51.6430 321.5086 0002048   0.7561  69.2289 15.54271367109073'''
+
 xtle = TwoLineElement(s)
 msat = Satellite.Satellite(xtle)
 #t = Tracker(msat)
@@ -48,14 +56,17 @@ plt.axes(projection=ccrs.PlateCarree()).stock_img()
 fig = plt.gcf()
 fig.show()
 fig.canvas.draw()
-
-tim = datetime.utcnow()
-for i in range(10000):
-    pos = msat.get_position(tim)
+flag = True
+color = ['r','g','b','y','m']
+i = 0
+t = datetime.utcnow()
+while flag:
+    pos = msat.get_position(t)
     plt.plot(pos[1], pos[0], 'ro', transform=ccrs.Geodetic())
-    tim += timedelta(minutes=1)
-    #plt.pause(1)
-    fig.canvas.draw()
-#plt.show()
+    t += timedelta(minutes=1)
+    plt.pause(1)
+    i = (i+1)%len(color)
+    break
+plt.show()
 
 
