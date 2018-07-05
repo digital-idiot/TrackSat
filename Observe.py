@@ -44,8 +44,7 @@ class ObserverLocation:
 
 class Observe:
 
-    def __init__(self, db_path='Sat_Repo.db', table_name='Sat_Info', tle_attr='RAW_TLE',
-                 observer_location=ObserverLocation(), condition=None, verbose=False):
+    def __init__(self, observer_location, db_path='Sat_Repo.db', table_name='Sat_Info', tle_attr='RAW_TLE', condition=None, verbose=False):
         '''
         try:
             db_uri = (db_path + '?mode=rw').format(pathname2url(db_path))
@@ -100,7 +99,6 @@ class Observe:
             return None
 
     def observe_sky(self, verbose=False):
-        color = ['r', 'g', 'b', 'y', 'm', 'k', 'tab:purple', 'tab:brown']
         observed = pandas.DataFrame(columns=['s', 'r', 't'])
         i = 0
         pyplot.tight_layout()
@@ -112,6 +110,7 @@ class Observe:
         #pyplot.title("Observable Satellites", va='top', ha='center')
         for tle in self.__tle_list:
             data = Observe.locate(tle, self.__observer_location, verbose=verbose)
+            print(data)
             if data:
                 sat = data[0]
                 position = data[1]
@@ -119,11 +118,14 @@ class Observe:
                     r = math.cos(position[0].degrees)
                     t = position[1].degrees
                     observed.loc[i] = sat, r, t
-                    ax.plot(t, r, color[i % len(color)] + 'o', label=sat)
+                    ax.plot(t, r, 'o', label=sat)
                     i += 1
         pyplot.legend(bbox_to_anchor=(1, 0), loc="lower right", bbox_transform=pyplot.gcf().transFigure)
         pyplot.show()
 
 
-ob = Observe(verbose=True)
+ob = Observe(ObserverLocation(lat = '52.2177583 N', lon = '6.8889094 E'), condition= "STATUS='Operational'", verbose=True)
+ob.observe_sky(verbose=True)
+
+ob = Observe(ObserverLocation(lat = '30.34817 N', lon = '78.047752 E'), condition= "STATUS='Operational'", verbose=True)
 ob.observe_sky(verbose=True)
