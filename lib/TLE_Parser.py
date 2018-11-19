@@ -1,6 +1,8 @@
 import re
 import magic
-import sqlite3
+# import sqlite3
+import psycopg2
+from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from urllib.request import pathname2url
 import ntpath
 
@@ -142,7 +144,7 @@ class TwoLineElement:
             return None
 
     @staticmethod
-    def parse_title(title, verbose=False):
+    def parse_title(title, verbose=True):
         try:
             if title and isinstance(title, str):
                 status_pattern = re.compile(r"\[[PBSX+\-]\]")
@@ -184,7 +186,7 @@ class TwoLineElement:
                             if TwoLineElement.verify_line_checksum(tle_lines[1]):
                                 try:
                                     tle_dict['SATELLITE_NUMBER'] = int(tle_lines[1][2:7])
-                                    tle_dict['CLASSFICATION'] = tle_lines[1][7]
+                                    tle_dict['CLASSIFICATION'] = tle_lines[1][7]
                                     if int(tle_lines[1][9:11]) < 57:
                                         tle_dict['LAUNCH_YEAR'] = int('20' + tle_lines[1][9:11])
                                     else:
@@ -313,7 +315,7 @@ class TwoLineElement:
 
 class TwoLineElements:
     @staticmethod
-    def parse_tle_file(tle_file_path, ignore=False, verbose=False):
+    def parse_tle_file(tle_file_path, ignore=False, verbose=True):
         tle_collection = list()
         tle_list = list()
         flag = False
@@ -435,22 +437,25 @@ class TwoLineElements:
         sql_str = sql_str[:-2] + ' );'
         return sql_str
 
-    def gen_db(self, db_path='Sat_Repo.db', table_name='Sat_Info', verbose=True):
+    def gen_db(self, db_path='data/Sat_Repo.db', table_name='Sat_Info', verbose=True):
         try:
             if isinstance(db_path, str):
                 try:
-                    db_uri = (db_path + '?mode=rw').format(pathname2url(db_path))
-                    conn = sqlite3.connect(db_uri)
-                except sqlite3.OperationalError:
+                    # db_uri = (db_path + '?mode=rw').format(pathname2url(db_path))
+                    # conn = psycopg2.connect(db_uri)
+                    conn = psycopg2.connect(host="localhost", database="postgres", user="postgres", password="postgres")
+                except psycopg2.OperationalError:
                     if verbose:
                         print("Database does not exist")
-                    conn = sqlite3.connect(db_path)
+                    conn = psycopg2.connect(db_path)
+                conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+                conn.autocommit = True
                 with conn:
                     db_pointer = conn.cursor()
                     create_sql = 'CREATE TABLE IF NOT EXISTS ' + table_name + ' ' + TwoLineElements.make_schema()
                     db_pointer.execute(create_sql)
                     for tle_dict in self.__tle_dump:
-                        insert_query = 'INSERT INTO ' + table_name
+                        insert_query = 'INSERT INTO public.' + table_name
                         attributes = list(tle_dict.keys())
                         insert_query += ' ('
                         values_string = list()
@@ -460,13 +465,14 @@ class TwoLineElements:
                             if value == str():
                                 value = None
                             values_string.append(value)
-                        insert_query = insert_query[:-2] + ' ) VALUES (' + '?, '*len(attributes)
+                        insert_query = insert_query[:-2] + ' ) VALUES (' + '%s, '*len(attributes)
                         insert_query = insert_query[:-2] + ' );'
                         try:
                             db_pointer.execute(insert_query, values_string)
-                        except sqlite3.Error:
+                        except psycopg2.Error as perr:
                             if verbose:
-                                print('Warning: Record Insertion Failed\n', 'Record Values: ', values_string, '\n')
+                                # print('Warning: Record Insertion Failed\n', 'Record Values: ', values_string, '\n')
+                                print(perr)
                 conn.close()
             else:
                 raise InvalidArgumentError("gen_db: Expected <str> as argument")
@@ -474,7 +480,7 @@ class TwoLineElements:
             if verbose:
                 print(arg_err)
             return None
-        except sqlite3.OperationalError as sqlite_err:
+        except psycopg2.OperationalError as sqlite_err:
             if verbose:
                 print(sqlite_err)
             return None

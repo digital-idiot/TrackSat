@@ -1,4 +1,5 @@
-import sqlite3
+# import sqlite3
+import psycopg2
 import math
 from skyfield.api import EarthSatellite, Topos, load
 import pandas
@@ -44,17 +45,23 @@ class ObserverLocation:
 
 class Observe:
 
-    def __init__(self, observer_location, db_path='Sat_Repo.db', table_name='Sat_Info', tle_attr='RAW_TLE', condition=None, verbose=False):
-        '''
-        try:
-            db_uri = (db_path + '?mode=rw').format(pathname2url(db_path))
-            conn = sqlite3.connect(db_uri)
-        except sqlite3.OperationalError:
-            if verbose:
-                print("Database does not exist")
-            conn = None
-        '''
-        conn = sqlite3.connect(db_path)
+    def __init__(
+            self, observer_location,
+            db_path='data/Sat_Repo.db',
+            table_name='Sat_Info',
+            tle_attr='RAW_TLE',
+            condition=None, verbose=False
+    ):
+
+        # try:
+        #     db_uri = (db_path + '?mode=rw').format(pathname2url(db_path))
+        #     conn = sqlite3.connect(db_uri)
+        # except sqlite3.OperationalError:
+        #     if verbose:
+        #         print("Database does not exist")
+        #     conn = None
+
+        conn = psycopg2.connect(db_path)
         if conn:
             with conn:
                 db_pointer = conn.cursor()
@@ -90,7 +97,9 @@ class Observe:
                 if flag:
                     temperature = observer_location.temperature()
                     pressure = observer_location.pressure()
-                    return line0.strip() + " : " + line1[2:7], app.altaz(temperature_C=temperature, pressure_mbar=pressure)
+                    return line0.strip() + " : " + line1[2:7], app.altaz(
+                        temperature_C=temperature, pressure_mbar=pressure
+                    )
             else:
                 raise ValueError("Expected <ObserverLocation> as observer_location")
         except ValueError as val_err:
@@ -107,7 +116,7 @@ class Observe:
         ax.set_theta_zero_location("N")
         ax.set_rmax(1)
         ax.grid(True)
-        #pyplot.title("Observable Satellites", va='top', ha='center')
+        # pyplot.title("Observable Satellites", va='top', ha='center')
         for tle in self.__tle_list:
             data = Observe.locate(tle, self.__observer_location, verbose=verbose)
             print(data)
@@ -124,8 +133,18 @@ class Observe:
         pyplot.show()
 
 
-ob = Observe(ObserverLocation(lat = '52.2177583 N', lon = '6.8889094 E'), condition= "STATUS='Operational'", verbose=True)
+ob = Observe(ObserverLocation(
+    lat='52.2177583 N',
+    lon='6.8889094 E'),
+    condition="STATUS='Operational'",
+    verbose=True
+)
 ob.observe_sky(verbose=True)
 
-ob = Observe(ObserverLocation(lat = '30.34817 N', lon = '78.047752 E'), condition= "STATUS='Operational'", verbose=True)
+ob = Observe(
+    ObserverLocation(
+        lat='30.34817 N',
+        lon='78.047752 E'),
+    condition="STATUS='Operational'",
+    verbose=True)
 ob.observe_sky(verbose=True)

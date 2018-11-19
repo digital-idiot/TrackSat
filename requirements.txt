@@ -9,3 +9,4 @@ pandas >= 0.22.0
 skyfield >= 1.2
 orbit_predictor >= 1.8.6
 pytz >= 2018.3
+psycopg2-binary >= 2.7.6.1
