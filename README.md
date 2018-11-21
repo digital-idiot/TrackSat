@@ -1,7 +1,8 @@
 # TrackSat
-## Purely Python based Satellite Tracking Tool
 
-### Track all the satellites specified in [CelesTrak](https://www.celestrak.com/NORAD/elements/master.asp)
+Purely Python based Satellite Tracking Tool
+
+Track all the satellites specified in [CelesTrak](https://www.celestrak.com/NORAD/elements/master.asp)
 
 Webapp: https://github.com/digital-idiot/TrackSat-Web
 
