@@ -8,6 +8,7 @@
 # Distribution / packaging
 .Python
 build/
+.idea
 develop-eggs/
 dist/
 downloads/
@@ -105,10 +106,4 @@ venv.bak/
 # http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
 [Ll]ocal
 [Ss]cripts
-
-.idea/TrackSat.iml
-.idea/libraries/
-.idea/misc.xml
-.idea/modules.xml
-.idea/vcs.xml
-.idea/workspace.xml
+.directory
